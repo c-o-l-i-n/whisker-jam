@@ -1,3 +1,22 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@font-face {
+  font-family: 'Next Sunday';
+  src: url('/fonts/next-sunday.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Squealer';
+  src: url('/fonts/squealer.woff2') format('woff2');
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: calc(100% + env(safe-area-inset-top) / 2);
+  overscroll-behavior: contain;
+}
