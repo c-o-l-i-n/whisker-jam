@@ -1,21 +1,13 @@
 import { inject, Injectable } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import {
   REALTIME_LISTEN_TYPES,
   RealtimeChannel,
   SupabaseClient,
 } from '@supabase/supabase-js';
-import {
-  BehaviorSubject,
-  map,
-  Observable,
-  of,
-  shareReplay,
-  switchMap,
-} from 'rxjs';
+import { BehaviorSubject, map, Observable, shareReplay } from 'rxjs';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable()
 export class JamClientService {
   private readonly supabase = inject(SupabaseClient);
 
@@ -23,28 +15,14 @@ export class JamClientService {
     null,
   );
 
-  readonly messages$ = this.jamChannel$.pipe(
-    switchMap((jamChannel) =>
-      jamChannel
-        ? new Observable(
-            (subscriber) =>
-              jamChannel
-                .on(
-                  REALTIME_LISTEN_TYPES.BROADCAST,
-                  { event: 'test' },
-                  (payload) => subscriber.next(payload),
-                )
-                .subscribe().unsubscribe,
-          )
-        : of(null),
-    ),
-    shareReplay(1),
-  );
-
-  readonly inJamSession$: Observable<boolean> = this.jamChannel$.pipe(
+  readonly jamSessionInProgress$: Observable<boolean> = this.jamChannel$.pipe(
     map((jamChannel) => !!jamChannel),
     shareReplay(1),
   );
+
+  readonly jamSessionInProgress = toSignal(this.jamSessionInProgress$, {
+    requireSync: true,
+  });
 
   readonly jamSessionId$ = this.jamChannel$.pipe(
     map((jamChannel) =>
@@ -52,6 +30,8 @@ export class JamClientService {
     ),
     shareReplay(1),
   );
+
+  readonly jamSessionId = toSignal(this.jamSessionId$, { requireSync: true });
 
   joinJamSession(jamId: string): void {
     this.jamChannel$.next(this.supabase.channel(jamId.trim().toUpperCase()));
