@@ -28,7 +28,7 @@ import { RouterLink } from '@angular/router';
 
       <!-- End Button -->
       <button class="btn btn-neutral mt-10" (click)="onLeaveButtonClick()">
-        Leave Jame Session
+        Leave Jam Session
       </button>
     } @else {
       <!-- Home Button -->
