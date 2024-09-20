@@ -5,36 +5,38 @@ import { ChangeDetectionStrategy, Component, output } from '@angular/core';
   standalone: true,
   imports: [],
   template: `
-    <!-- Snare -->
-    <img
-      class="h-64"
-      src="/images/snare.webp"
-      (mousedown)="drumHit.emit('snare')"
-    />
-
-    <!-- Kick -->
-    <img
-      class="h-64"
-      src="/images/kick.webp"
-      (mousedown)="drumHit.emit('kick')"
-    />
-
-    <!-- Crash Cymbal -->
-    <img
-      class="h-64"
-      src="/images/crash-cymbal.webp"
-      (mousedown)="drumHit.emit('crash-cymbal')"
-    />
-
     <!-- Cowbell -->
     <img
-      class="h-32"
+      class="hover:animate-hit -mb-16 ml-[25%] w-1/6"
       src="/images/cowbell.webp"
       (mousedown)="drumHit.emit('cowbell')"
     />
+
+    <div class="flex w-full items-end">
+      <!-- Snare -->
+      <img
+        class="hover:animate-hit mb- z-10 w-1/3"
+        src="/images/snare.webp"
+        (mousedown)="drumHit.emit('snare')"
+      />
+
+      <!-- Kick -->
+      <img
+        class="hover:animate-hit -ml-[5%] -mr-[18%] w-1/2"
+        src="/images/kick.webp"
+        (mousedown)="drumHit.emit('kick')"
+      />
+
+      <!-- Crash Cymbal -->
+      <img
+        class="hover:animate-hit w-2/5"
+        src="/images/crash-cymbal.webp"
+        (mousedown)="drumHit.emit('crash-cymbal')"
+      />
+    </div>
   `,
   host: {
-    class: 'flex items-center gap-3',
+    class: 'w-full select-none items-center gap-3',
   },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

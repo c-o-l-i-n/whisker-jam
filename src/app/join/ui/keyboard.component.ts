@@ -26,7 +26,7 @@ interface keyboardKey {
     }
   `,
   host: {
-    class: 'flex',
+    class: 'flex select-none',
   },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
