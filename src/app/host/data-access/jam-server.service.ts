@@ -17,13 +17,20 @@ import {
 } from 'rxjs';
 import { Sound } from '../../shared/util/sound';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { NotePayload } from '../../shared/util/payload.mode';
 
 @Injectable()
 export class JamServerService {
   private readonly supabase = inject(SupabaseClient);
 
   private readonly soundMap = new Map<string, Sound>([
+    ['guitar', new Sound('/audio/guitar.wav')],
+    ['bass', new Sound('/audio/bass.wav')],
+    ['synth', new Sound('/audio/synth.wav')],
     ['snare', new Sound('/audio/snare.wav')],
+    ['kick', new Sound('/audio/kick.wav')],
+    ['crash-cymbal', new Sound('/audio/crash-cymbal.wav')],
+    ['cowbell', new Sound('/audio/cowbell.wav')],
   ]);
 
   private readonly jamChannel$ = new BehaviorSubject<RealtimeChannel | null>(
@@ -42,14 +49,14 @@ export class JamServerService {
   private readonly sounds$ = this.jamChannel$.pipe(
     switchMap((jamChannel) =>
       jamChannel
-        ? new Observable<string>(
+        ? new Observable<NotePayload>(
             (subscriber) =>
               jamChannel
                 .on(
                   REALTIME_LISTEN_TYPES.BROADCAST,
                   { event: 'test' },
                   (payload) =>
-                    subscriber.next(payload['payload']['sound'] as string),
+                    subscriber.next(payload['payload'] as NotePayload),
                 )
                 .subscribe().unsubscribe,
           )
@@ -118,10 +125,10 @@ export class JamServerService {
     this.sounds$
       .pipe(
         takeUntilDestroyed(),
-        filter((sound) => !!sound),
+        filter((soundPayload) => !!soundPayload),
       )
-      .subscribe((sound) => {
-        this.soundMap.get(sound)?.play();
+      .subscribe((soundPayload) => {
+        this.soundMap.get(soundPayload.sound)?.play(soundPayload.semitones);
       });
   }
 

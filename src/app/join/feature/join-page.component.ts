@@ -1,14 +1,27 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
 import { JamClientService } from '../data-access/jam-client.service';
 import { FormsModule, NgForm } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { RouterLink } from '@angular/router';
+import { KeyboardComponent } from '../ui/keyboard.component';
+import { DrumSetComponent } from '../ui/drum-set.component';
 
 @Component({
   selector: 'wj-join-page',
   standalone: true,
-  imports: [FormsModule, FontAwesomeModule, RouterLink],
+  imports: [
+    FormsModule,
+    FontAwesomeModule,
+    RouterLink,
+    KeyboardComponent,
+    DrumSetComponent,
+  ],
   template: `
     @if (jamSessionInProgress()) {
       <p>
@@ -18,18 +31,39 @@ import { RouterLink } from '@angular/router';
         </span>
       </p>
 
-      <!-- Snare Drum -->
-      <img
-        src="/images/snare.png"
-        alt="Snare Drum"
-        class="mx-auto w-full max-w-sm"
-        (mousedown)="sendSound('snare')"
-      />
-
-      <!-- End Button -->
-      <button class="btn btn-neutral mt-10" (click)="onLeaveButtonClick()">
+      <!-- Leave Button -->
+      <button
+        class="btn btn-neutral my-5 w-full"
+        (click)="leaveModal.showModal()"
+      >
         Leave Jam Session
       </button>
+
+      <dialog #leaveModal class="modal">
+        <div class="modal-box">
+          <h3 class="text-lg font-bold">Are you sure?</h3>
+          <p class="py-4">Are you sure you want to leave the jam session?</p>
+          <div class="modal-action">
+            <form method="dialog">
+              <button class="btn mr-5">No</button>
+              <button class="btn btn-primary" (click)="onLeaveButtonClick()">
+                Yes
+              </button>
+            </form>
+          </div>
+        </div>
+      </dialog>
+
+      @if (instrument() === 'drums') {
+        <!-- Drum Set -->
+        <wj-drum-set (drumHit)="sendSound($event)" />
+      } @else {
+        <!-- Piano Keyboard -->
+        <wj-keyboard
+          class="h-56 w-full"
+          (keyPress)="sendSound(instrument(), $event)"
+        />
+      }
     } @else {
       <!-- Home Button -->
       <a class="btn btn-ghost mb-5 text-primary" routerLink="..">
@@ -40,7 +74,12 @@ import { RouterLink } from '@angular/router';
       <form
         #form="ngForm"
         (ngSubmit)="
-          onJoinButtonClick(form.value.jamSessionId, form.value.nickname, form)
+          onJoinButtonClick(
+            form.value.jamSessionId,
+            form.value.nickname,
+            form.value.instrument,
+            form
+          )
         "
         class="flex w-full flex-col gap-5"
       >
@@ -52,7 +91,7 @@ import { RouterLink } from '@angular/router';
             ngModel
             required
             name="jamSessionId"
-            class="input input-bordered flex-grow font-bold uppercase text-primary"
+            class="input input-bordered font-bold uppercase text-primary"
           />
         </label>
 
@@ -64,8 +103,23 @@ import { RouterLink } from '@angular/router';
             ngModel
             required
             name="nickname"
-            class="input input-bordered flex-grow"
+            class="input input-bordered"
           />
+        </label>
+
+        <label class="flex flex-col gap-1">
+          Choose your instrument
+          <select
+            required
+            ngModel
+            name="instrument"
+            class="select select-bordered"
+          >
+            <option value="guitar">Guitar</option>
+            <option value="bass">Bass</option>
+            <option value="synth">Synth</option>
+            <option value="drums">Drums</option>
+          </select>
         </label>
 
         <!-- Join Button -->
@@ -92,17 +146,23 @@ export default class JoinPageComponent {
   readonly jamSessionInProgress = this.jamClientService.jamSessionInProgress;
   readonly jamSessionId = this.jamClientService.jamSessionId;
 
-  sendSound(sound: string): void {
-    this.jamClientService.sendSound(sound);
+  instrument = signal('guitar');
+
+  sendSound(sound: string, semitones = 0): void {
+    this.jamClientService.sendSound(sound, semitones);
   }
 
   onJoinButtonClick(
     jamSessionId: string,
     nickname: string,
+    instrument: string,
     form: NgForm,
   ): void {
-    form.reset();
+    console.log(instrument);
+
+    this.instrument.set(instrument);
     this.jamClientService.joinJamSession(jamSessionId);
+    form.reset();
   }
 
   onLeaveButtonClick(): void {

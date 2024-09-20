@@ -9,6 +9,7 @@ const context = new AudioContext();
 
 unmute(context);
 
+// adapted from https://stackoverflow.com/a/76916942
 export class Sound {
   url = '';
   buffer: AudioBuffer | null = null;
@@ -53,12 +54,16 @@ export class Sound {
     });
   }
 
-  play(volume = 1, time = 0) {
+  play(semitones = 0, volume = 1, time = 0) {
     if (!this.buffer) return;
 
     // Create a new sound source and assign it the loaded sound's buffer:
     const source = context.createBufferSource();
     source.buffer = this.buffer;
+
+    // Apply pitch shift based on the semitones
+    const playbackRate = Math.pow(2, semitones / 12);
+    source.playbackRate.value = playbackRate;
 
     // Keep track of all sources created, and stop tracking them once they finish playing:
     const insertedAt = this.sources.push(source) - 1;

@@ -6,6 +6,7 @@ import {
   SupabaseClient,
 } from '@supabase/supabase-js';
 import { BehaviorSubject, map, Observable, shareReplay } from 'rxjs';
+import { NotePayload } from '../../shared/util/payload.mode';
 
 @Injectable()
 export class JamClientService {
@@ -41,11 +42,11 @@ export class JamClientService {
     this.jamChannel$.next(null);
   }
 
-  sendSound(sound: string): void {
+  sendSound(sound: string, semitones = 0): void {
     this.jamChannel$.value?.send({
       type: REALTIME_LISTEN_TYPES.BROADCAST,
       event: 'test',
-      payload: { sound },
+      payload: { sound, semitones } as NotePayload,
     });
   }
 }
