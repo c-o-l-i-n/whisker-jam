@@ -6,12 +6,13 @@ import { RouterLink } from '@angular/router';
   standalone: true,
   imports: [RouterLink],
   template: `
-    <a class="btn" routerLink="host">Host Jam Session</a>
-    <a class="btn btn-primary" routerLink="join">Join Jam Session</a>
+    <div class="glass flex flex-col gap-3 rounded-xl p-6">
+      <a class="btn" routerLink="host">Host Jam Session</a>
+      <a class="btn btn-primary" routerLink="join">Join Jam Session</a>
+    </div>
   `,
   host: {
-    class:
-      'mx-auto flex-grow flex w-full max-w-sm flex-col justify-center gap-3',
+    class: 'mx-auto flex-grow flex w-full max-w-sm flex-col justify-center',
   },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

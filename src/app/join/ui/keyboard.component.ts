@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  output,
+} from '@angular/core';
 
 interface keyboardKey {
   semitones: number;
@@ -13,11 +18,12 @@ interface keyboardKey {
     @for (key of keys; track key.semitones) {
       <div
         [class]="
-          'border-2 border-black ' +
+          'glass border-2 border-black ' +
           (key.black
-            ? '-ml-[9%] block h-3/5 w-[9%] translate-x-[50%] rounded-b-lg bg-black hover:bg-slate-600'
-            : 'h-full w-[12.5%] rounded-b-lg bg-white hover:bg-slate-400')
+            ? 'z-10 -ml-[9%] block h-3/5 w-[9%] translate-x-[50%] rounded-b-lg bg-black hover:bg-slate-600'
+            : ' h-full w-[12.5%] rounded-b-lg hover:!bg-slate-400')
         "
+        [style]="{ 'background-color': key.black ? undefined : color() }"
         tabindex="0"
         (mousedown)="keyPress.emit(key.semitones)"
         (keydown.space)="keyPress.emit(key.semitones)"
@@ -31,6 +37,8 @@ interface keyboardKey {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class KeyboardComponent {
+  readonly color = input('white');
+
   readonly keyPress = output<number>();
 
   readonly keys: keyboardKey[] = [

@@ -3,6 +3,7 @@ import {
   REALTIME_LISTEN_TYPES,
   REALTIME_PRESENCE_LISTEN_EVENTS,
   RealtimeChannel,
+  RealtimePresenceState,
   SupabaseClient,
 } from '@supabase/supabase-js';
 import {
@@ -13,11 +14,12 @@ import {
   Observable,
   of,
   shareReplay,
+  subscribeOn,
   switchMap,
 } from 'rxjs';
 import { Sound } from '../../shared/util/sound';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { NotePayload } from '../../shared/util/payload.mode';
+import { NotePayload, Player } from '../../shared/util/types';
 
 @Injectable()
 export class JamServerService {
@@ -31,6 +33,8 @@ export class JamServerService {
     ['kick', new Sound('/audio/kick.wav')],
     ['crash-cymbal', new Sound('/audio/crash-cymbal.wav')],
     ['cowbell', new Sound('/audio/cowbell.wav')],
+    ['vocals', new Sound('/audio/meow.wav')],
+    ['ernest', new Sound('/audio/ernest.wav')],
   ]);
 
   private readonly jamChannel$ = new BehaviorSubject<RealtimeChannel | null>(
@@ -46,61 +50,48 @@ export class JamServerService {
 
   readonly jamSessionId = toSignal(this.jamSessionId$, { requireSync: true });
 
-  private readonly sounds$ = this.jamChannel$.pipe(
+  readonly sounds$ = this.jamChannel$.pipe(
     switchMap((jamChannel) =>
       jamChannel
         ? new Observable<NotePayload>(
             (subscriber) =>
-              jamChannel
-                .on(
-                  REALTIME_LISTEN_TYPES.BROADCAST,
-                  { event: 'test' },
-                  (payload) =>
-                    subscriber.next(payload['payload'] as NotePayload),
-                )
-                .subscribe().unsubscribe,
+              jamChannel.on(
+                REALTIME_LISTEN_TYPES.BROADCAST,
+                { event: 'sound' },
+                (payload) => subscriber.next(payload['payload'] as NotePayload),
+              )?.unsubscribe,
           )
         : EMPTY,
     ),
     shareReplay(1),
   );
 
-  private readonly members$ = this.jamChannel$.pipe(
+  private readonly players$ = this.jamChannel$.pipe(
     switchMap((jamChannel) => {
-      const members: string[] = [];
-
       return jamChannel
-        ? new Observable(
+        ? new Observable<RealtimePresenceState<Player>>(
             (subscriber) =>
-              jamChannel
-                .on(
-                  REALTIME_LISTEN_TYPES.PRESENCE,
-                  { event: REALTIME_PRESENCE_LISTEN_EVENTS.SYNC },
-                  () => {
-                    console.log('sync', jamChannel.presenceState());
-                  },
-                )
-                .on(
-                  REALTIME_LISTEN_TYPES.PRESENCE,
-                  { event: REALTIME_PRESENCE_LISTEN_EVENTS.JOIN },
-                  ({ key, newPresences }) => {
-                    console.log('joined', key, newPresences);
-                    subscriber.next([...members, key]);
-                  },
-                )
-                .on(
-                  REALTIME_LISTEN_TYPES.PRESENCE,
-                  { event: REALTIME_PRESENCE_LISTEN_EVENTS.LEAVE },
-                  ({ key, leftPresences }) => {
-                    console.log('left', key, leftPresences);
-                    subscriber.next([...members, key]);
-                  },
-                )
-                .subscribe().unsubscribe,
+              jamChannel.on(
+                REALTIME_LISTEN_TYPES.PRESENCE,
+                { event: REALTIME_PRESENCE_LISTEN_EVENTS.SYNC },
+                () => subscriber.next({ ...jamChannel.presenceState() }),
+              )?.unsubscribe,
+          ).pipe(
+            map((presenceState) =>
+              Object.entries(presenceState).map(
+                ([id, presence]): Player => ({
+                  ...presence[0],
+                  id,
+                }),
+              ),
+            ),
           )
         : of(null);
     }),
+    shareReplay(1),
   );
+
+  readonly players = toSignal(this.players$);
 
   readonly latestSound = toSignal(this.sounds$);
 
@@ -114,14 +105,16 @@ export class JamServerService {
   });
 
   constructor() {
-    this.members$.pipe(takeUntilDestroyed()).subscribe();
+    this.jamChannel$
+      .pipe(filter((channel) => !!channel))
+      .subscribe((channel) => channel.subscribe());
 
     // load all sounds
     for (const sound of this.soundMap.values()) {
       sound.load();
     }
 
-    // play sounds when when they are received
+    // play sounds when they are received
     this.sounds$
       .pipe(
         takeUntilDestroyed(),
