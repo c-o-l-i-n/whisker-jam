@@ -5,9 +5,6 @@ import {
   effect,
   ElementRef,
   inject,
-  QueryList,
-  Renderer2,
-  Signal,
   viewChildren,
 } from '@angular/core';
 import { JamServerService } from '../data-access/jam-server.service';
@@ -15,18 +12,25 @@ import { FormsModule, NgForm } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { RouterLink } from '@angular/router';
-import { JsonPipe, KeyValuePipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { QRCodeModule } from 'angularx-qrcode';
 
 @Component({
   selector: 'wj-host-page',
   standalone: true,
-  imports: [FormsModule, FontAwesomeModule, RouterLink, JsonPipe, KeyValuePipe],
+  imports: [FormsModule, FontAwesomeModule, RouterLink, QRCodeModule],
   template: `
     @if (jamSessionInProgress()) {
+      <qrcode
+        [qrdata]="qrCodeData()"
+        [width]="82"
+        colorDark="4a00ff"
+        class="absolute left-4 top-4 overflow-hidden rounded-lg"
+      />
+
       <div class="flex w-full items-start justify-between">
         <p class="glass w-max rounded-xl px-5 py-2 text-xl text-white">
-          Hosting Jam Session:
+          Jam Session:
           <span class="ml-2 rounded bg-white px-2 py-1 font-bold text-primary">
             {{ jamSessionId() }}
           </span>
@@ -180,7 +184,16 @@ export default class HostPageComponent {
 
   readonly players = computed(() => this.jamServerService.players());
 
+  readonly qrCodeData = computed(() => {
+    const { protocol, host } = window.location;
+    const jamSessionId = encodeURIComponent(this.jamSessionId() ?? '');
+
+    return `${protocol}//${host}/join?id=${jamSessionId}`;
+  });
+
   constructor() {
+    effect(() => console.log(this.qrCodeData()));
+
     this.jamServerService.sounds$
       .pipe(takeUntilDestroyed())
       .subscribe((sound) => {

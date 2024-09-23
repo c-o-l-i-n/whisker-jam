@@ -22,6 +22,7 @@
     "@fortawesome/free-regular-svg-icons": "^6.5.2",
     "@fortawesome/free-solid-svg-icons": "^6.5.2",
     "@supabase/supabase-js": "^2.45.4",
+    "angularx-qrcode": "^18.0.1",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },

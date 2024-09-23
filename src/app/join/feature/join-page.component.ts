@@ -2,11 +2,9 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  ElementRef,
+  effect,
   inject,
-  signal,
-  viewChild,
-  viewChildren,
+  input,
 } from '@angular/core';
 import { JamClientService } from '../data-access/jam-client.service';
 import { FormsModule, NgForm } from '@angular/forms';
@@ -15,7 +13,7 @@ import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { RouterLink } from '@angular/router';
 import { KeyboardComponent } from '../ui/keyboard.component';
 import { DrumSetComponent } from '../ui/drum-set.component';
-import { JsonPipe, TitleCasePipe } from '@angular/common';
+import { TitleCasePipe } from '@angular/common';
 import { Cat, Instrument } from '../../shared/util/types';
 
 @Component({
@@ -27,7 +25,6 @@ import { Cat, Instrument } from '../../shared/util/types';
     RouterLink,
     KeyboardComponent,
     DrumSetComponent,
-    JsonPipe,
     TitleCasePipe,
   ],
   template: `
@@ -112,7 +109,7 @@ import { Cat, Instrument } from '../../shared/util/types';
           Jam Session ID
           <input
             type="text"
-            ngModel
+            [ngModel]="jamSessionIdFromUrl()"
             required
             name="jamSessionId"
             class="input input-bordered font-bold uppercase text-primary"
@@ -172,6 +169,13 @@ import { Cat, Instrument } from '../../shared/util/types';
 })
 export default class JoinPageComponent {
   private readonly jamClientService = inject(JamClientService);
+
+  // jam session id from query param
+  readonly jamSessionIdFromUrl = input<string>('', { alias: 'id' });
+
+  readonly asdf = effect(() => {
+    console.log('id', this.jamSessionIdFromUrl());
+  });
 
   readonly faChevronLeft = faChevronLeft;
 

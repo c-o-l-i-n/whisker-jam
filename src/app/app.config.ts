@@ -3,7 +3,7 @@ import {
   provideExperimentalZonelessChangeDetection,
   isDevMode,
 } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { routes } from './app.routes';
 import { provideSupabase } from './custom-providers';
 import { provideServiceWorker } from '@angular/service-worker';
@@ -14,7 +14,7 @@ export const appConfig: ApplicationConfig = {
     provideExperimentalZonelessChangeDetection(),
 
     // router
-    provideRouter(routes),
+    provideRouter(routes, withComponentInputBinding()),
 
     // supabase
     provideSupabase({
